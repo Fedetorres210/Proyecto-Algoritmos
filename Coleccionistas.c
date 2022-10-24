@@ -726,6 +726,7 @@ PostalesRepetidas * crearListaRepetidas(Postales * lista){
 	PostalesRepetidas  *nuevaLista;
 	Postales * ayudantePostal1,*temporal,*ayudantePostal2;
 	int len = largo(lista);
+	//printf("El largo es %d", len);
 	int contador=0;
 	nuevaLista=NULL;
 	ayudantePostal1=lista;
@@ -734,10 +735,12 @@ PostalesRepetidas * crearListaRepetidas(Postales * lista){
 			break;
 		}
 		int iterador=0;
+		//printf("\n Pasa el primer if \n");
 		//Temporal Forma parte de tipo Postales
 		temporal=NULL;
 		ayudantePostal2=ayudantePostal1;
-		char  postal = ayudantePostal2->postal.codigoPostal;
+		char *  postal = ayudantePostal2->postal.codigoPostal;
+		//printf("\n %s \n",postal);
 		struct Postal postalStruct =ayudantePostal2->postal;
 		
 		temporal=agregarPostal(temporal,ayudantePostal2->postal);
@@ -753,7 +756,7 @@ PostalesRepetidas * crearListaRepetidas(Postales * lista){
 			ayudantePostal2=ayudantePostal2->siguiente;
 			
 		}
-		printf("El iterador es  %d",iterador);
+		//printf("El iterador es  %d",iterador);
 		nuevaLista = agregarListaRepetida(nuevaLista,postalStruct,iterador);
 		
 		ayudantePostal1=temporal;
@@ -768,7 +771,9 @@ Coleccionistas *generadorPostalesRepetidas(Coleccionistas * lista){
 	Coleccionistas * ayudante;
 	Postales * ayudante1;
 	ayudante=lista;
+	printf("Ingresa generador \n ");
 	while(ayudante!=NULL){
+		printf("Ingresa al while\n ");
 		if(ayudante->coleccionista.obtenidas==NULL){
 			printf("\n El coleccionista de cedula %d no tiene ninguna postal\n ",ayudante->coleccionista.cedula);
 			ayudante=ayudante->siguiente;
@@ -789,21 +794,27 @@ Coleccionistas *generadorPostalesRepetidas(Coleccionistas * lista){
 
 void postalesRepetidas(Coleccionistas *lista,int cedula){
 	Coleccionistas *ayudante;
-	Postales * ayudante3;
+	PostalesRepetidas * ayudante3;
 	ayudante= validadorCedulas(lista,cedula);
 	if(ayudante->coleccionista.obtenidas==NULL){
 		printf("\n El coleccionista no tiene ninguna postal\n ");
 		return NULL;
 	}
-		printf("\n Postal %s \n", ayudante->coleccionista.repetidas->postal.codigoPostal);
+	ayudante3 = ayudante->coleccionista.repetidas;
+	while(ayudante3!=NULL){
+		printf("\n Postal %s \n", ayudante3->postal.codigoPostal);
 	
-		printf("Seccion o Equipo %s \n", ayudante->coleccionista.repetidas->postal.seccionOEquipo);
+		printf("Seccion o Equipo %s \n", ayudante3->postal.seccionOEquipo);
 	
-		printf("Nombre del jugador, estadio o elemento: %s \n", ayudante->coleccionista.repetidas->postal.nombrePostal);
+		printf("Nombre del jugador, estadio o elemento: %s \n", ayudante3->postal.nombrePostal);
 					
-		printf("Precio : %d \n \n", ayudante->coleccionista.repetidas->postal.precioPostal);
+		printf("Precio : %d \n \n",ayudante3->postal.precioPostal);
 		
-		printf("Numero de repetidas %d\n ",ayudante->coleccionista.repetidas->repetida);
+		printf("Numero de repetidas %d\n ",ayudante3->repetida);
+		ayudante3=ayudante3->siguiente;
+		
+	}
+		
 
 	
 } 
@@ -817,24 +828,28 @@ Postales * crearListaFaltantes(Postales * lista, PostalesRepetidas * repetidas){
 	}
 	Postales * ayudantePostales,*faltantes;
 	faltantes=NULL;
+	//printf("\n ingresa al creador de lista \n ");
 	PostalesRepetidas *ayudantePostalesRepetidas;
 	ayudantePostales=lista;
 	while(ayudantePostales!=NULL){
 		int valor=0;
 		ayudantePostalesRepetidas=repetidas;
-		
+		//printf("\n ingresa al while de creador  \n ");
 		while(ayudantePostalesRepetidas!=NULL){
+			//printf(" \n %s codigo postal general  ",ayudantePostales->postal.codigoPostal);
+			//printf("\n %s codigo propio de postales ",ayudantePostalesRepetidas->postal.codigoPostal);
 			if(strcmp(ayudantePostales->postal.codigoPostal,ayudantePostalesRepetidas->postal.codigoPostal)==0){
 				valor=1;
 			}
-			ayudantePostales=ayudantePostales->siguiente;
+			ayudantePostalesRepetidas=ayudantePostalesRepetidas->siguiente;
 		}
 		if(valor==0){
 			faltantes = agregarPostal(faltantes,ayudantePostales->postal);
 		}
-		ayudantePostalesRepetidas=ayudantePostalesRepetidas->siguiente;
+		ayudantePostales=ayudantePostales->siguiente;
 		
 	}
+	//printf("Codigo de lugar #2 %s",faltantes->siguiente->postal.codigoPostal);
 	
 	return faltantes;
 }
@@ -842,11 +857,13 @@ Postales * crearListaFaltantes(Postales * lista, PostalesRepetidas * repetidas){
 Coleccionistas * generadorListaFaltantes(Coleccionistas * lista,Postales * postales){
 	Coleccionistas * ayudante;
 	ayudante=lista;
+	//printf("\n ingresa al generador \n ");
 	while(ayudante!=NULL){
 		ayudante->coleccionista.faltantes=crearListaFaltantes(postales,ayudante->coleccionista.repetidas);
-
+		
 		ayudante=ayudante->siguiente;
 	}
+	//printf("\n %s codigo lista  \n ",lista->coleccionista.faltantes->siguiente->postal.codigoPostal);
 	return lista;
 	
 }
@@ -858,13 +875,20 @@ void imprimidorListaFaltantes(Coleccionistas *lista, int cedula){
 		printf("\n Las Postales no han salido al mercado espera o agrega postales generales \n");
 		
 	}else{
-		printf("\n Postal %s \n", ayudante->coleccionista.faltantes->postal.codigoPostal);
+		Postales  * ayudantePostales;
+		ayudantePostales =ayudante->coleccionista.faltantes;
+		while(ayudantePostales!=NULL){
+			printf("\n *******************Postal %s******************* \n", ayudantePostales->postal.codigoPostal);
 		
-		printf("Seccion o Equipo %s \n", ayudante->coleccionista.faltantes->postal.seccionOEquipo);
+			printf("*******************Seccion o Equipo %s******************* \n", ayudantePostales->postal.seccionOEquipo);
 		
-		printf("Nombre del jugador, estadio o elemento: %s \n", ayudante->coleccionista.faltantes->postal.nombrePostal);
+			printf("*******************Nombre del jugador, estadio o elemento: %s *******************\n", ayudantePostales->postal.nombrePostal);
 						
-		printf("Precio : %d \n \n", ayudante->coleccionista.faltantes->postal.precioPostal);
+			printf("*******************Precio : %d \n *******************\n", ayudantePostales->postal.precioPostal);
+			ayudantePostales=ayudantePostales->siguiente;
+			
+		}
+		
 		
 	}
 
@@ -1239,46 +1263,52 @@ int checarPostales(Coleccionistas * lista, char  codigo[], int cedula){
 }
 
 
+
+
 Coleccionistas * intercambiarPostales(Coleccionistas * lista,int cedulaOwner, int cedulaSolicitador, char codigoOwner[],char codigoSolicitador[]){
-	Coleccionistas *ayudanteOwner, * ayudanteSolicitador;
-	Postales * postalOwner, *postalSolicitador;
-	struct Postal postalOwner1, postalSolicitador1;
 	
-	// Nodos de el owner y el que pide la postal
-	ayudanteOwner= validadorCedulas(lista,cedulaOwner);
+	Coleccionistas * ayudanteSolicitador, * ayudanteOwner;
 	ayudanteSolicitador = validadorCedulas(lista,cedulaSolicitador);
-	// las listas de postales de los anteriores
-	postalOwner =  encontrarPostal(ayudanteOwner->coleccionista.obtenidas, codigoOwner);
-	postalOwner1 = postalOwner->postal;
-	// la postal especifica que se requiere 
-	postalSolicitador=encontrarPostal(ayudanteSolicitador->coleccionista.obtenidas, codigoSolicitador);
-	postalSolicitador1 = postalSolicitador->postal;
-
-	ayudanteOwner->coleccionista.obtenidas= agregarPostal(ayudanteOwner->coleccionista.obtenidas,postalSolicitador1);
 	
-	ayudanteOwner->coleccionista.obtenidas= eliminarPostalObtenida(ayudanteOwner->coleccionista.obtenidas,codigoOwner,cedulaOwner);
+	ayudanteOwner = validadorCedulas(lista,cedulaOwner);
+	Postales * listaPostalOwner,*listaPostalSolicitador;
 	
-	ayudanteSolicitador->coleccionista.obtenidas= agregarPostal(ayudanteSolicitador->coleccionista.obtenidas,postalOwner1);
-	ayudanteSolicitador->coleccionista.obtenidas= eliminarPostalObtenida(ayudanteSolicitador->coleccionista.obtenidas,codigoSolicitador,cedulaSolicitador);
+	listaPostalOwner = encontrarPostal(ayudanteOwner->coleccionista.obtenidas,codigoOwner);
 	
-	consultarCatalogoPostales(ayudanteSolicitador->coleccionista.obtenidas);
-	consultarCatalogoPostales(ayudanteOwner->coleccionista.obtenidas);
+	listaPostalSolicitador = encontrarPostal(ayudanteSolicitador->coleccionista.obtenidas,codigoSolicitador);
+	
+	ayudanteOwner->coleccionista.obtenidas = agregarPostal(ayudanteOwner->coleccionista.obtenidas,listaPostalSolicitador->postal);
+	
+	ayudanteSolicitador->coleccionista.obtenidas= agregarPostal(ayudanteSolicitador->coleccionista.obtenidas,listaPostalOwner->postal);
+	
+	printf("El codigo oWNER ES %s",codigoOwner);
+	ayudanteOwner->coleccionista.obtenidas = eliminarPostalObtenida(ayudanteOwner->coleccionista.obtenidas,codigoOwner,0);
+	ayudanteSolicitador->coleccionista.obtenidas = eliminarPostalObtenida(ayudanteSolicitador->coleccionista.obtenidas,codigoSolicitador,0);
+	
+	
 	return lista;
-
+	
+	
+	
 }
+
+
+
+
+
+
 
 
 Postales * encontrarPostal(Postales * lista, char codigo[]){
 	Postales * ayudante;
-	ayudante = lista;
+	ayudante= lista;
 	while(ayudante!=NULL){
 		if(strcmp(ayudante->postal.codigoPostal,codigo)==0){
-			printf("********************SI SE ENCUENTRA EL VALOR ************");
 			return ayudante;
 		}
 		ayudante=ayudante->siguiente;
 	}
-	return ayudante;
+	return ayudante; 
 	
 }
 
@@ -1309,29 +1339,35 @@ Coleccionistas * comprarPostal(Coleccionistas * lista, char codigo[],int precio,
 
 Postales * eliminarPostalObtenida(Postales * lista,char codigo[],int cedula)
 {
-	printf("Entra a la funcion eliminadora :D");
-	Postales * ayudantePostales,*nuevaLista;
-	ayudantePostales =  lista;
+	Postales * ayudante,*nuevaLista,*actual;
+	ayudante= lista;
+	int valor=1;
 	nuevaLista=NULL;
-	int valor =0;
-	while(ayudantePostales!=NULL){
-		printf("Inicia el while ");
-		printf("Codigo de la postal %s ",ayudantePostales->postal.codigoPostal);
-		if(strcmp(ayudantePostales->postal.codigoPostal,codigo)!=0){
-			nuevaLista = agregarPostal(nuevaLista,ayudantePostales->postal);
+	//actual= encontrarPostal(lista,codigo);
+	printf("\n el codigo es %s \n ",codigo);
+	
+	while(ayudante!=NULL){
+		if(strcmp(ayudante->postal.codigoPostal,codigo)!=0){
+			nuevaLista=agregarPostal(nuevaLista,ayudante->postal);
+			
+		}else{
+			printf("Se ha encontrado una similitud");
+			if (valor==0){
+				nuevaLista=agregarPostal(nuevaLista,ayudante->postal);
+			}else{
+				valor=0;
+			}
 		}
-		else{
-			if(valor<1){
-				nuevaLista = agregarPostal(nuevaLista,ayudantePostales->postal);
-				valor++;
-				}
-				
-		}
-		printf("El valor es de %d",valor);
-
-		ayudantePostales=ayudantePostales->siguiente;
+		
+		ayudante=ayudante->siguiente;
 	}
-	printf("El codigo de postal 1 es %s",lista->postal.codigoPostal);
+//	int result=1;
+//	while(result<valor){
+//		printf(" el result es %d",result);
+//		nuevaLista= agregarPostal(nuevaLista,actual->postal);
+//		result++;
+//		
+//	}
 	return nuevaLista;
 	
 }
@@ -1386,5 +1422,47 @@ Cola * creadorColaSistema(Coleccionistas * lista){
 		
 	}
 	return nuevaCola;
+	
+}
+
+
+
+
+Coleccionistas * revisionDeNiveles(Coleccionistas * lista){
+	Coleccionistas * ayudante;
+	ayudante=lista;
+	while(ayudante!=NULL){
+		if(ayudante->coleccionista.transacciones>=30){
+			printf("Felicidades coleccionista de cedula %d has ganado un ascenso en las categorias ",ayudante->coleccionista.cedula);
+			memcpy(ayudante->coleccionista.rango, niveladorRangos(ayudante->coleccionista.rango), 20); 
+		}
+		
+	ayudante=ayudante->siguiente;	
+	}
+	
+	return lista;
+}
+
+
+
+
+char niveladorRangos(char rango[]){
+	
+	if(strcmp(rango,"bronce")==0){
+		return "plata";
+	}
+	if(strcmp(rango,"plata")==0){
+		return "oro";
+	}
+		if(strcmp(rango,"oro")==0){
+		return "zafiro";
+	}
+		if(strcmp(rango,"zafiro")==0){
+		return "zafiro";
+	}
+	else{
+		return "bronce"
+	}
+	
 	
 }
