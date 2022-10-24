@@ -36,17 +36,33 @@ typedef struct cola{
 	struct cola * siguiente;
 	
 }Cola;
+
+
+struct Registro{
+	int precio;
+	char codigo[99];
+	int cedulaComprador;
+};
+
+
+typedef struct ventas{
+	struct Registro registro;
+	struct ventas * siguiente;
+}Ventas;
+
+
 struct Coleccionista{
 	int cedula;
 	char nombreCompleto[99];
 	char fechaNacimiento[99];
 	char correoElectronico[99];
-	char rango[99];
+	const char* rango;
 	int transacciones;
 	Postales * obtenidas;
 	PostalesRepetidas * repetidas;
 	Postales *faltantes;
 	Cola * reservaciones;
+	Ventas * venta;
 };
 
 typedef struct nodoCole{
@@ -56,7 +72,7 @@ typedef struct nodoCole{
 	struct nodoCole *anterior;
 }Coleccionistas;
 
-
+void imprimirPilaVenta(Coleccionistas * lista);
 
 Postales * agregarPostal(Postales * lista, struct Postal postal);
 void consultarCatalogoPostales(Postales* lista);
@@ -110,18 +126,20 @@ Coleccionistas * creadorSistema(Cola * sistema, Coleccionistas * lista);
 void imprimirCola(Cola * cola);
 Cola * creadorColaSistema(Coleccionistas * lista);
 Coleccionistas * sistemaDeReservacion(Cola* sistema, Coleccionistas * lista);
+Coleccionistas * revisionDeNiveles(Coleccionistas * lista);
+char niveladorRangos(char rango[]);
+Ventas * agregarVenta(Ventas * pila, struct Registro registro);
 
 int main(){
 	Coleccionistas*lista=NULL;
 	Postales *postales=NULL;
-	struct Coleccionista coleccionista ={ 123456,"JUAN", "2/04/22", "juan@hotmail.com", "BRONZE",0,NULL,NULL,NULL,NULL};
+	struct Coleccionista coleccionista ={ 123456,"JUAN", "2/04/22", "juan@hotmail.com", "BRONZE",0,NULL,NULL,NULL,NULL,NULL};
 	lista=agregarColeccionista(lista,coleccionista);
 //	lista=modificarColeccionistas(lista);
 //	consultarCatalogoColeccionistas(lista);
 	lista = albumPanini2022(lista,postales);
 	//creadorColaGeneral(lista);
 	//lista = opcionesColeccionistas(lista);
-	consultarCatalogoColeccionistas(lista);
 	return 0;
 
 }
@@ -406,6 +424,7 @@ void consultarCatalogoColeccionistas(Coleccionistas* lista){
 				printf("FECHA DE NACIMIENTO DEL COLECCIONISTA: %s \n",ayudante->coleccionista.fechaNacimiento);
 				printf("El correo electronico del coleccionista: %s \n",ayudante->coleccionista.correoElectronico);
 				printf("El rango del coleccionista: %s \n",ayudante->coleccionista.rango);
+				printf("El numero de transacciones del coleccionista %d",ayudante->coleccionista.transacciones);
 				break;
 			}
 			ayudante=ayudante->siguiente;
@@ -471,8 +490,10 @@ Coleccionistas * modificarColeccionistas(Coleccionistas *lista){
 						scanf("%s",&ayudante->coleccionista.correoElectronico);
 					}
 					if(opcion==4){
+						char rango;
 						printf("Ingrese el nuevo rango del coleccionista: ");
-						scanf("%s",&ayudante->coleccionista.rango);
+						scanf("%s",&rango);
+						ayudante->coleccionista.rango=rango;
 					}
 					if(opcion==5){
 						printf("Nos vemos pronto! ");
@@ -503,11 +524,12 @@ Coleccionistas * opcionesColeccionistas(Coleccionistas *lista,Postales *postales
 		printf("Digite 3 si desea consultar la lista de coleccionistas \n");
 		printf("Digite 4 si desea ingresar al sistema de postales de los coleccionistas\n");
 		printf("Digite 5 si desea ver la lista de repetidas y faltantes del coleccionista \n");
-		printf("Digite 6 si desea hacer una reservacion a otro coleccionista de las postales");
-		printf("Digite 7 si desea eliminar a un coleccionista");
+		printf("Digite 6 si desea hacer una reservacion a otro coleccionista de las postales\n ");
+		printf("\n Digite 7 si desea eliminar a un coleccionista\n ");
 		printf("Digite 8 si desea salir del sistema de coleccionista \n");
 		scanf("%d",&opcion);
 		if (opcion==1){
+			char nivel;
 			struct Coleccionista coleccionista;
 			printf("\n Ingrese el numero de  cedula del coleccionista");
 			scanf("%d",&coleccionista.cedula);
@@ -518,10 +540,28 @@ Coleccionistas * opcionesColeccionistas(Coleccionistas *lista,Postales *postales
 			scanf(" %s",&coleccionista.correoElectronico);
 			printf("Ingrese la fecha de nacimiento del coleccionista");
 			scanf(" %s",&coleccionista.fechaNacimiento);
-			printf("\n Ingrese el rango que tiene el coleccionista:");
-			scanf(" %s",&coleccionista.rango);
+			int opcion;
+			printf("\n Ingrese 1 si  el rango que tiene el coleccionista es zafiro, \n ingrese 2 si el rango es oro\n 3 si es el rango es plata \n 4 si el rango es bronce:");
+			scanf("%d",&opcion);
+			printf("\n La opcion vale %d \n",opcion );
+			if(opcion==1){
+				coleccionista.rango="zafiro";
+			}
+			if(opcion==2){
+				coleccionista.rango="oro";
+			}
+			if(opcion==3){
+				coleccionista.rango="plata";
+			}
+			if(opcion==4){
+				coleccionista.rango="bronce";
+			}
+			printf("\n El rango del coleccionista es %s \n",coleccionista.rango);
+			coleccionista.transacciones=35;
+			
 			coleccionista.obtenidas=NULL;
 			coleccionista.reservaciones=NULL;
+			coleccionista.venta=NULL;
 			
 			lista = agregarColeccionista(lista, coleccionista);
 			
@@ -570,12 +610,9 @@ Coleccionistas * albumPanini2022(Coleccionistas *lista,Postales * postales){
 		int opcion;
 		printf("\n Digite 1 si desea ingresar al sistema de coleccionista\n");
 //		printf("Digite 2 si desea modificar la informacion del coleccionista\n ");
-		printf("Digite 2 si desea elminar la informacion de algun coleccionista\n");
-//		printf("Digite 4 si desea ver la informacion de los coleccionistas\n");
-		printf("Digite 3 si desea agregar una lista de postales a un coleccionista\n");
-		printf("Digite 4 si desea ver la lista de repetidas y faltantes del coleccionista\n ");
-		printf("Digite 5 si desea ingresar al menu de postales generales \n");
-		printf("Digite 6 si desea salir del sistema");
+		printf("Digite 2 desea ingresar al menu general del sistema\n");
+		printf("Digite 3 si desea ingresar al menu de postales generales \n");
+		printf("Digite 4 si desea salir del sistema");
 		scanf("%d",&opcion);
 		if(opcion==1){
 			printf("***********Ha elegido Ingresar al sistema de coleccionista**************\n ");
@@ -586,26 +623,22 @@ Coleccionistas * albumPanini2022(Coleccionistas *lista,Postales * postales){
 			printf("Ha escogido ingresar al sistema de postales :D \n ");
 			Cola * sistema = NULL;
 			sistema =creadorColaSistema(lista);
-			lista = sistemaDeReservacion(sistema,lista);
 			imprimirCola(sistema);
+			lista = sistemaDeReservacion(sistema,lista);
+			sistema =creadorColaSistema(lista);
+			imprimirCola(sistema);
+			imprimirPilaVenta( lista);
+			
 			
 //			lista= creadorSistema(sistema,lista);
 		}
+
 		if (opcion==3){
-			printf("Ha escogido agregar una lista de postales a un coleccionista\n ");
-			lista = agregarListaColeccionista(lista);
-		}
-		if(opcion==4){
-			printf("\n Ha escogido revisar la lista de repetidas y las faltantes del coleccionista\n ");
-			lista =  menuRepetidasyFaltantes(lista, postales);
-		
-		}
-		if (opcion==5){
 			printf("Ha decidido ingresar al menu de postales Generales\n ");
 			postales = accionDePostales(postales);
 			
 		}
-		if(opcion==6){
+		if(opcion==4){
 			printf("Gracias por utilizar el sistema de Album de Panini 2022! \n");
 			break;
 		}
@@ -1017,7 +1050,7 @@ Cola * colaDePrioridad(Cola * cola){
 			colaBronce=agregarElementoCola(colaBronce,ayudante->colaA);
 		}
 		else{
-			printf("\n El nivel del coleccionista de cedula %d esta mal ingresado \n ");
+			printf("\n El nivel del coleccionista de cedula %d esta mal ingresado \n ",ayudante->colaA.cedulaSolicitador);
 			printf("Se le ingresara de ultimo en la cola\n ");
 			printf(" PORFAVOR CORREGIR EL ERROR SI DESEA TENER MEJORES OFERTAS\n");
 			colaSobrante=agregarElementoCola(colaSobrante,ayudante->colaA);
@@ -1027,10 +1060,14 @@ Cola * colaDePrioridad(Cola * cola){
 		ayudante=ayudante->siguiente;
 			
 	}
-	colaBronce->siguiente=colaSobrante;
-	colaPlata->siguiente=colaBronce;
-	colaOro->siguiente=colaPlata;
-	colaZafiro->siguiente=colaOro;
+	if(colaBronce==NULL){colaBronce=colaSobrante;}else{colaBronce->siguiente=colaSobrante;}
+	if(colaPlata==NULL){colaPlata=colaBronce;}else{colaPlata->siguiente=colaBronce;}
+
+	if(colaOro==NULL){colaOro=colaPlata;}else{colaOro->siguiente=colaPlata;}
+
+	if(colaZafiro==NULL){ colaZafiro=colaOro;}else{colaZafiro->siguiente=colaOro;}
+	
+	printf("colaZafiro tiene de codigo %d ",colaZafiro->colaA.cedulaOwner);
 	return colaZafiro;
 	
 }
@@ -1168,9 +1205,9 @@ Coleccionistas * validadorCedulas(Coleccionistas * lista,int cedula){
 
 
 Cola * asignarValorRegistro(Cola * sistema,int valor){
-	printf("hola");
+	//printf("hola");
 	Cola * ayudante= sistema;
-	printf(" \n asignar valores %s \n",ayudante->colaA.registro);
+	//printf(" \n asignar valores %s \n",ayudante->colaA.registro);
 	while(ayudante!=NULL){
 		printf(" \n asignar valores %s \n",ayudante->colaA.registro);
 		if(strcmp("rechazada",ayudante->colaA.registro)==0||strcmp("aprobada",ayudante->colaA.registro)==0){
@@ -1192,10 +1229,24 @@ Cola * asignarValorRegistro(Cola * sistema,int valor){
 		
 }
 
+Cola * verificarRegistro(Cola * cola){
+	Cola * ayudante;
+	ayudante= cola;
+	while(ayudante!=NULL){
+		if(strcmp(ayudante->colaA.registro,"rechazada")==0||strcmp(ayudante->colaA.registro,"aprobada")==0){
+			ayudante=ayudante->siguiente;
+		}else{
+			break;
+		}
+	}
+	return ayudante;
+}
+
+
 
 Coleccionistas * sistemaDeReservacion(Cola* sistema, Coleccionistas * lista){
 	Cola * ayudante;
-	ayudante=sistema;
+	ayudante=verificarRegistro(sistema);
 	int valor=0;
 	while(ayudante!=NULL){
 		Coleccionistas * ayudanteColeccionistaOwner,*ayudanteColeccionistaSolicitador;
@@ -1281,9 +1332,16 @@ Coleccionistas * intercambiarPostales(Coleccionistas * lista,int cedulaOwner, in
 	
 	ayudanteSolicitador->coleccionista.obtenidas= agregarPostal(ayudanteSolicitador->coleccionista.obtenidas,listaPostalOwner->postal);
 	
-	printf("El codigo oWNER ES %s",codigoOwner);
 	ayudanteOwner->coleccionista.obtenidas = eliminarPostalObtenida(ayudanteOwner->coleccionista.obtenidas,codigoOwner,0);
 	ayudanteSolicitador->coleccionista.obtenidas = eliminarPostalObtenida(ayudanteSolicitador->coleccionista.obtenidas,codigoSolicitador,0);
+	
+	if(ayudanteSolicitador->coleccionista.transacciones>=30){
+		printf("Felicidades subes de nivel!");
+		ayudanteSolicitador= revisionDeNiveles(ayudanteSolicitador);
+		printf("Sale de la revision de niveles");
+		ayudanteSolicitador->coleccionista.transacciones=0;
+	}
+	
 	
 	
 	return lista;
@@ -1319,13 +1377,24 @@ Coleccionistas * comprarPostal(Coleccionistas * lista, char codigo[],int precio,
 	Postales * ayudantePostal;
 	ayudantePostal=encontrarPostal(ayudanteOwner->coleccionista.obtenidas,codigo);
 	int postal = ayudantePostal->postal.precioPostal-5;
+	struct Registro registro;
 	if(postal<=precio){
 		printf("El precio de la postal es %d",postal);
 		ayudantePostal->postal.precioPostal= precio;
 		ayudanteSolicitador->coleccionista.obtenidas= agregarPostal(ayudanteSolicitador->coleccionista.obtenidas,ayudantePostal->postal);
 		printf("Postal obtenida %s", ayudanteSolicitador->coleccionista.obtenidas->postal.codigoPostal);
 		ayudanteOwner->coleccionista.obtenidas=eliminarPostalObtenida(ayudanteOwner->coleccionista.obtenidas,codigo,cedulaOwner);
-		printf("\n Si se realiza la eliminacion \n ");
+		
+		registro.cedulaComprador=cedulaSolicitador;
+		registro.precio=precio;
+		memcpy(registro.codigo, codigo, 20);
+		ayudanteOwner->coleccionista.venta= agregarVenta(ayudanteOwner->coleccionista.venta, registro);
+		printf(" venta realizada a precio %d ",ayudanteOwner->coleccionista.venta);
+		if(precio>=25000){
+			printf("Felicidades subes de nivel de rango");
+			ayudanteSolicitador = revisionDeNiveles(ayudanteSolicitador);
+			printf("El nuevo rango es %s ",ayudanteSolicitador->coleccionista.rango);
+		}
 		//ayudanteOwner->coleccionista.reservaciones->colaA.registro="aprobada";
 		
 		
@@ -1344,14 +1413,14 @@ Postales * eliminarPostalObtenida(Postales * lista,char codigo[],int cedula)
 	int valor=1;
 	nuevaLista=NULL;
 	//actual= encontrarPostal(lista,codigo);
-	printf("\n el codigo es %s \n ",codigo);
+
 	
 	while(ayudante!=NULL){
 		if(strcmp(ayudante->postal.codigoPostal,codigo)!=0){
 			nuevaLista=agregarPostal(nuevaLista,ayudante->postal);
 			
 		}else{
-			printf("Se ha encontrado una similitud");
+			
 			if (valor==0){
 				nuevaLista=agregarPostal(nuevaLista,ayudante->postal);
 			}else{
@@ -1378,13 +1447,13 @@ void imprimirCola(Cola * cola){
 	ayudante=cola;
 	while(ayudante!=NULL){
 
-			printf("el codigo de la postal es  %s :\n ",ayudante->colaA.codigoPostal);
-			printf("el codigo de la postal de intercambio  es  %s :\n ",ayudante->colaA.codigoPostalCambio);
-			printf("La cedula del solicitador es %d :\n",ayudante->colaA.cedulaSolicitador);
-			printf("La cedula del Owner es   %d \n :",ayudante->colaA.cedulaOwner);
-			printf("El precio es  %d\n  :",ayudante->colaA.precio);
-			printf("El registro es   %s \n :",ayudante->colaA.registro);
-			printf("El tipo de transaccion es  %s :",ayudante->colaA.tipoTransaccion);
+			printf("\n El codigo de la postal es: %s",ayudante->colaA.codigoPostal);
+			printf("\n El codigo de la postal de intercambio  es:  %s ",ayudante->colaA.codigoPostalCambio);
+			printf("\n La cedula del solicitador es: %d ",ayudante->colaA.cedulaSolicitador);
+			printf("\n La cedula del Owner es:  %d  ",ayudante->colaA.cedulaOwner);
+			printf("\n El precio es:  %d :",ayudante->colaA.precio);
+			printf("\n El registro es:   %s",ayudante->colaA.registro);
+			printf("\n El tipo de transaccion es:  %s \n ",ayudante->colaA.tipoTransaccion);
 			
 
 		ayudante=ayudante->siguiente;
@@ -1392,12 +1461,12 @@ void imprimirCola(Cola * cola){
 }
 
 
-Coleccionistas * creadorSistema(Cola * sistema, Coleccionistas * lista){
-	printf("empieza correctamente\n ");
-	lista = sistemaDeReservacion(sistema, lista);
-	
-	return lista;
-}
+//Coleccionistas * creadorSistema(Cola * sistema, Coleccionistas * lista){
+//	printf("empieza correctamente\n ");
+//	lista = sistemaDeReservacion(sistema, lista);
+//	
+//	return lista;
+//}
 
 
 
@@ -1414,13 +1483,15 @@ Cola * creadorColaSistema(Coleccionistas * lista){
 		while(temporal!=NULL){
 			//printf(" \n Cedula owner coleccionista 1 %d",temporal->colaA.cedulaOwner);
 			nuevaCola= agregarElementoCola(nuevaCola,temporal->colaA);
-			printf(" \n Cedula del coleccionista con nuevacOLA 1 %d",nuevaCola->colaA.cedulaSolicitador);
+			//printf(" \n Cedula del coleccionista con nuevacOLA 1 %d",nuevaCola->colaA.cedulaSolicitador);
 			temporal=temporal->siguiente;
 		}
 		
 		ayudante= ayudante->siguiente;
 		
 	}
+	
+	nuevaCola = colaDePrioridad(nuevaCola);
 	return nuevaCola;
 	
 }
@@ -1431,14 +1502,24 @@ Cola * creadorColaSistema(Coleccionistas * lista){
 Coleccionistas * revisionDeNiveles(Coleccionistas * lista){
 	Coleccionistas * ayudante;
 	ayudante=lista;
-	while(ayudante!=NULL){
-		if(ayudante->coleccionista.transacciones>=30){
+	
 			printf("Felicidades coleccionista de cedula %d has ganado un ascenso en las categorias ",ayudante->coleccionista.cedula);
-			memcpy(ayudante->coleccionista.rango, niveladorRangos(ayudante->coleccionista.rango), 20); 
-		}
+			
+			if(strcmp(ayudante->coleccionista.rango,"bronce")==0){
+					ayudante->coleccionista.rango="plata";
+				}
+			if(strcmp(ayudante->coleccionista.rango,"plata")==0){
+					ayudante->coleccionista.rango="oro";
+				}
+				
+			if(strcmp(ayudante->coleccionista.rango,"oro")==0){
+					ayudante->coleccionista.rango="zafiro";
+				}
 		
-	ayudante=ayudante->siguiente;	
-	}
+			printf("El nuevo rango es %s",ayudante->coleccionista.rango);
+		
+		
+	
 	
 	return lista;
 }
@@ -1446,23 +1527,51 @@ Coleccionistas * revisionDeNiveles(Coleccionistas * lista){
 
 
 
-char niveladorRangos(char rango[]){
+
+
+
+Ventas * agregarVenta(Ventas * pila, struct Registro registro){
+	Ventas * ayudante;
+	ayudante= pila;
+	if(pila==NULL){
+		pila = (Ventas*)malloc(sizeof(Ventas));
+		pila->registro=registro;
+		pila->siguiente=NULL;
+		
+	}else{
+		while(ayudante->siguiente!=NULL){
+			ayudante=ayudante->siguiente;
+		}
+		ayudante->siguiente= (Ventas*)malloc(sizeof(Ventas));
+		ayudante->siguiente->registro=registro;
+		ayudante->siguiente->siguiente=NULL;
+	}
+
 	
-	if(strcmp(rango,"bronce")==0){
-		return "plata";
-	}
-	if(strcmp(rango,"plata")==0){
-		return "oro";
-	}
-		if(strcmp(rango,"oro")==0){
-		return "zafiro";
-	}
-		if(strcmp(rango,"zafiro")==0){
-		return "zafiro";
-	}
-	else{
-		return "bronce"
-	}
-	
+	return pila;
 	
 }
+
+void imprimirPilaVenta(Coleccionistas * lista){
+	Coleccionistas *ayudante;
+	ayudante=lista;
+	Ventas * venta;
+	while(ayudante!=NULL){
+		venta= ayudante->coleccionista.venta;
+		printf("\n Lista de ventas realizada por el coleccionista de cedula %d \n ",ayudante->coleccionista.cedula);
+		int contador=0;
+		while(venta!=NULL){
+			printf("\n Venta #%d",contador);
+			printf("\n Cedula comprador : %d ",venta->registro.cedulaComprador);
+			printf("\n Precio de venta : %d ",venta->registro.precio);
+			printf("\n codigo Postal vendida : %s ",venta->registro.codigo);
+			venta=venta->siguiente;
+			contador++;
+			
+		}
+		ayudante=ayudante->siguiente;
+	}
+}
+
+
+
